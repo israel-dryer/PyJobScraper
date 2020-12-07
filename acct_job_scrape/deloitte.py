@@ -17,7 +17,7 @@ class JobScraper(ws.WebScraper):
     """A webscraper for Deloitte jobs"""
 
     def __init__(self):
-        super().__init__(company_name='Deloitte')
+        super().__init__(name='Deloitte')
 
     def extract_page_urls(self, page):
         """Extract urls from the page for further scraping; return to `urls_to_scrape`"""
@@ -34,7 +34,7 @@ class JobScraper(ws.WebScraper):
         url = 'https://jobs2.deloitte.com/us/en/job/' + str(req_id) + '/'
 
         self.data_scraped.append([
-            record_id, self.today, job_id, req_id, self.company_name, title, category,
+            record_id, self.today, job_id, req_id, self.name, title, category,
             location, "", "", "", description, url])
 
     def extract_page_data(self, page):
@@ -52,7 +52,6 @@ class JobScraper(ws.WebScraper):
         next_page = "https://jobs2.deloitte.com/us/en/Experienced-all-jobs"
 
         while True:
-            print('Total Records: ' + str(len(self.data_scraped)))  # TODO for testing only
             self.driver.get(next_page)
             result = self.extract_page_data(None)
             if not result:
@@ -65,7 +64,7 @@ class JobScraper(ws.WebScraper):
 
         if self.data_scraped:
             DataTools.save_to_database(self.data_scraped, CONN_STRING, INSERT_QUERY)
-            print(f"{self.company_name} >> {len(self.data_scraped)} records")
+            print(f"{self.name} >> {len(self.data_scraped)} records")
 
 
 if __name__ == '__main__':

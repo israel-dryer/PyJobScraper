@@ -17,7 +17,7 @@ class JobScraper(ws.WebScraper):
     """A webscraper for Marcum jobs"""
 
     def __init__(self):
-        super().__init__(company_name='Marcum')
+        super().__init__(name='Marcum')
 
     def extract_page_urls(self, page):
         template = "https://marcum-hr.secure.force.com/recruit/fRecruit__ApplyJob?vacancyNo={}"
@@ -38,7 +38,7 @@ class JobScraper(ws.WebScraper):
         record_id = '105-' + self.today + str(job_id) + str(req_id)
 
         self.data_scraped.append([
-            record_id, self.today, job_id, req_id, self.company_name, title, category,
+            record_id, self.today, job_id, req_id, self.name, title, category,
             location, "", "", "", "", url])
 
     def extract_card_data(self, card):
@@ -77,7 +77,7 @@ class JobScraper(ws.WebScraper):
 
         if self.data_scraped:
             DataTools.save_to_database(self.data_scraped, CONN_STRING, INSERT_QUERY)
-            print(f"{self.company_name} >> {len(self.data_scraped)} records")
+            print(f"{self.name} >> {len(self.data_scraped)} records")
 
 
 if __name__ == '__main__':

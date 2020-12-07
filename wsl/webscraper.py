@@ -1,6 +1,7 @@
 ﻿import re
 import json
 import requests
+from abc import ABC, abstractmethod
 from time import sleep
 from datetime import datetime
 from bs4 import BeautifulSoup
@@ -9,16 +10,36 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException
 
 
-class WebScraper:
+class WebScraper(ABC):
     """A general purpose webscraping class. DO NOT USE this directly; subclass and override the methods"""
 
-    def __init__(self, company_name):
-        self.company_name = company_name
+    def __init__(self, name):
+        self.name = name
         self.today = datetime.today().strftime("%Y-%m-%d")
         self.driver = None
         self.session = None
         self.data_scraped = []
         self.urls_to_scrape = set()
+
+    @abstractmethod
+    def extract_page_urls(self, page):
+        """Extract urls from the page for further scraping; return to `urls_to_scrape`"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def extract_card_data(self, card):
+        """Extract data from a single card; return should reflect final form and return to `scraped_data`"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def extract_page_data(self, page):
+        """Extract data from page; return should reflect final form and return to `scraped_data`"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def run(self):
+        """Run the scraper"""
+        raise NotImplementedError
 
     def create_webdriver(self, options=None, headless=False, implicit_wait=3, maximize_window=False, **kwargs):
         """Create a webdriver instead using the Edge web driver"""
@@ -27,8 +48,7 @@ class WebScraper:
         edge_options.page_load_strategy = 'eager'
         edge_options.add_argument('log-level=3')
         if headless:
-            edge_options.add_argument('disable-gpu')
-            edge_options.add_argument('headless')
+            edge_options.headless = headless
         if options:
             for opt in options:
                 edge_options.add_argument(opt)
@@ -60,7 +80,7 @@ class WebScraper:
         else:
             raise Exception("Invalid format specified for 'format'")
 
-    def post_request(self, url, format='soup', use_session=False, **kwargs):
+    def post_request(self, url, out_format='soup', use_session=False, **kwargs):
         """Send a post request"""
         if use_session:
             if not self.session:  # a session will be created if not already existing
@@ -68,29 +88,13 @@ class WebScraper:
             response = self.session.post(url, **kwargs)
         else:
             response = requests.post(url, **kwargs)
-        if format == 'soup':
+        if out_format == 'soup':
             return BeautifulSoup(response.text, 'lxml')
-        elif format == 'json':
+        elif out_format == 'json':
             return response.json()
-        elif format == 'text':
+        elif out_format == 'text':
             return response.text
-        elif format == 'response':
+        elif out_format == 'response':
             return response
         else:
             raise Exception("Invalid format specificed for 'format'")
-
-    def extract_page_urls(self, page):
-        """Extract urls from the page for further scraping; return to `urls_to_scrape`"""
-        raise NotImplementedError
-
-    def extract_card_data(self, card):
-        """Extract data from a single card; return should reflect final form and return to `scraped_data`"""
-        raise NotImplementedError
-
-    def extract_page_data(self, page):
-        """Extract data from page; return should reflect final form and return to `scraped_data`"""
-        raise NotImplementedError
-
-    def run(self):
-        """Run the scraper"""
-        raise NotImplementedError

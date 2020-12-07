@@ -17,7 +17,7 @@ class JobScraper(ws.WebScraper):
     """A web scraper for KPMG jobs"""
 
     def __init__(self):
-        super().__init__(company_name='KPMG')
+        super().__init__(name='KPMG')
 
     def extract_page_urls(self, page):
         """Extract urls from the page for further scraping; return to `urls_to_scrape`"""
@@ -34,7 +34,7 @@ class JobScraper(ws.WebScraper):
         record_id = '120-' + self.today + str(job_id) + str(req_id)
 
         self.data_scraped.append([
-            record_id, self.today, job_id, req_id, self.company_name, title, category,
+            record_id, self.today, job_id, req_id, self.name, title, category,
             location, "", "", "", "", url])
 
     def extract_page_data(self, page):
@@ -63,7 +63,7 @@ class JobScraper(ws.WebScraper):
 
         if self.data_scraped:
             DataTools.save_to_database(self.data_scraped, CONN_STRING, INSERT_QUERY)
-            print(f"{self.company_name} >> {len(self.data_scraped)} records")
+            print(f"{self.name} >> {len(self.data_scraped)} records")
 
 
 if __name__ == '__main__':

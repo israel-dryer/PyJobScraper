@@ -28,7 +28,7 @@ class JobScraper(ws.WebScraper):
     """A web scraper for BDO jobs"""
 
     def __init__(self):
-        super().__init__(company_name='BDO')
+        super().__init__(name='BDO')
 
     def extract_page_urls(self, page):
         pass
@@ -45,7 +45,7 @@ class JobScraper(ws.WebScraper):
         state = row_data['formtext4']
         record_id = '175-' + self.today + str(job_id) + str(req_id)
         return (
-            record_id, self.today, job_id, req_id, self.company_name, title, "", "",
+            record_id, self.today, job_id, req_id, self.name, title, "", "",
             city, state, "", description, url
         )
 
@@ -68,7 +68,7 @@ class JobScraper(ws.WebScraper):
 
         while running:
             PAYLOAD['pageNumber'] = str(page_num)
-            page = self.post_request(url, headers=HEADERS, data=PAYLOAD, format='json')
+            page = self.post_request(url, headers=HEADERS, data=PAYLOAD, out_format='json')
             if self.extract_page_data(page):
                 page_num += 1
                 ws.sleep(0.5)
@@ -77,7 +77,7 @@ class JobScraper(ws.WebScraper):
 
         if self.data_scraped:
             DataTools.save_to_database(self.data_scraped, CONN_STRING, INSERT_QUERY)
-            print(f"{self.company_name} >> {len(self.data_scraped)} records")
+            print(f"{self.name} >> {len(self.data_scraped)} records")
 
 
 if __name__ == '__main__':

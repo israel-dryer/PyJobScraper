@@ -36,7 +36,7 @@ class JobScraper(ws.WebScraper):
     """A webscraper for CBIZ jobs"""
 
     def __init__(self):
-        super().__init__(company_name='Cherry Bekaert')
+        super().__init__(name='Cherry Bekaert')
 
     def extract_page_urls(self, page):
         pass
@@ -58,21 +58,21 @@ class JobScraper(ws.WebScraper):
         record_id = '145-' + self.today + str(job_id) + str(req_id)
 
         self.data_scraped.append([
-            record_id, self.today, job_id, req_id, self.company_name, title, category, "",
+            record_id, self.today, job_id, req_id, self.name, title, category, "",
             city, state, country, "", url
         ])
 
     def run(self):
         """Run the scraper"""
         url = 'https://recruiting.ultipro.com/CHE1006CBH/JobBoard/8effb9c6-91dc-4fae-4091-71d162d6fafe/JobBoardView/LoadSearchResults'
-        json_data = self.post_request(url, headers=HEADERS, data=PAYLOAD, format='json')
+        json_data = self.post_request(url, headers=HEADERS, data=PAYLOAD, out_format='json')
         cards = json_data['opportunities']
         for card in cards:
             self.extract_card_data(card)
 
         if self.data_scraped:
             DataTools.save_to_database(self.data_scraped, CONN_STRING, INSERT_QUERY)
-            print(f"{self.company_name} >> {len(self.data_scraped)} records")
+            print(f"{self.name} >> {len(self.data_scraped)} records")
 
 
 if __name__ == '__main__':

@@ -16,7 +16,7 @@ class JobScraper(ws.WebScraper):
     """A webscraper to extract jobs for CBIZ"""
 
     def __init__(self):
-        super().__init__(company_name='CBIZ')
+        super().__init__(name='CBIZ')
 
     def extract_card_data(self, card):
         pass
@@ -66,7 +66,7 @@ class JobScraper(ws.WebScraper):
         record_id = '180-' + self.today + str(job_id) + str(req_id)
 
         self.data_scraped.append([
-            record_id, self.today, job_id, req_id, self.company_name, title, category, "",
+            record_id, self.today, job_id, req_id, self.name, title, category, "",
             city, state, "", description, page.url
         ])
 
@@ -88,7 +88,7 @@ class JobScraper(ws.WebScraper):
 
         if self.data_scraped:
             DataTools.save_to_database(self.data_scraped, CONN_STRING, INSERT_QUERY)
-            print(f"{self.company_name} >> {len(self.data_scraped)} records")
+            print(f"{self.name} >> {len(self.data_scraped)} records")
 
 
 if __name__ == '__main__':

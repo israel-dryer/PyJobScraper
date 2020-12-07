@@ -23,7 +23,7 @@ class JobScraper(ws.WebScraper):
     """description of class"""
 
     def __init__(self):
-        super().__init__(company_name='BKD')
+        super().__init__(name='BKD')
 
     def extract_page_urls(self, page):
         pass
@@ -45,7 +45,7 @@ class JobScraper(ws.WebScraper):
         url = card.a.get('href')
         record_id = f'125-{self.today}{job_id}{req_id}'
 
-        return (record_id, self.today, job_id, req_id, self.company_name, title, "", location,
+        return (record_id, self.today, job_id, req_id, self.name, title, "", location,
                 "", "", "", description, url)
 
     def run(self):
@@ -71,7 +71,7 @@ class JobScraper(ws.WebScraper):
 
         if self.data_scraped:
             DataTools.save_to_database(self.data_scraped, CONN_STRING, INSERT_QUERY)
-            print(f"{self.company_name} >> {len(self.data_scraped)} records")
+            print(f"{self.name} >> {len(self.data_scraped)} records")
 
 
 if __name__ == '__main__':

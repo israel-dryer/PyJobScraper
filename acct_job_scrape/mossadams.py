@@ -32,7 +32,7 @@ class JobScraper(ws.WebScraper):
     """A web scraper for MossAdams jobs"""
 
     def __init__(self):
-        super().__init__(company_name='MossAdams')
+        super().__init__(name='MossAdams')
 
     def extract_page_urls(self, _):
         """Extract job urls to extract full job details"""
@@ -41,7 +41,7 @@ class JobScraper(ws.WebScraper):
 
         while True:
             payload = PAYLOAD + '"pageNo":' + str(page_num) + "}"
-            json_data = self.post_request(url, format='json', headers=HEADERS, data=payload)
+            json_data = self.post_request(url, out_format='json', headers=HEADERS, data=payload)
             if len(json_data['requisitionList']) == 0:
                 break
 
@@ -83,7 +83,7 @@ class JobScraper(ws.WebScraper):
 
         # consolidate the data record
         self.data_scraped.append([
-            record_id, self.today, job_id, req_id, self.company_name, title, "",
+            record_id, self.today, job_id, req_id, self.name, title, "",
             location, "", "", "", description, url])
 
     def run(self):
@@ -96,7 +96,7 @@ class JobScraper(ws.WebScraper):
 
         if self.data_scraped:
             DataTools.save_to_database(self.data_scraped, CONN_STRING, INSERT_QUERY)
-            print(f"{self.company_name} >> {len(self.data_scraped)} records")
+            print(f"{self.name} >> {len(self.data_scraped)} records")
 
 
 if __name__ == '__main__':
