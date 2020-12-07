@@ -48,7 +48,7 @@ class JobScraper(ws.WebScraper):
         country = json_data['jobLocation'][0]['address']['addressCountry']
         category = json_data['occupationalCategory']
         description = ws.BeautifulSoup(json_data['description'], 'lxml').text.replace('\xa0', ' ')
-        record_id = '170-' + '2020-12-03' + str(job_id) + str(req_id)
+        record_id = '170-' + self.today + str(job_id) + str(req_id)
 
         self.data_scraped.append([
             record_id, self.today, job_id, req_id, self.name, title,

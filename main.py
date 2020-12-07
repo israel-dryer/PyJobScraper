@@ -50,4 +50,4 @@ if __name__ == '__main__':
     print('Starting...')
     run()
     time_elapsed = perf_counter() - time_started
-    print(f'Finished in {time_elapsed:,d} seconds')
+    print(f'Finished in {time_elapsed:,0f} seconds')
