@@ -2,9 +2,11 @@
     JOB SCRAPER for Moss Adams
 
     Created:    2020-12-03
-    Modified:   2020-12-03
+    Modified:   2020-12-14
     Author:     Israel Dryer
 """
+from time import sleep
+from requests import exceptions
 import wsl.webscraper as ws
 from wsl.datatools import DataTools, ConnectionString
 
@@ -38,18 +40,25 @@ class JobScraper(ws.WebScraper):
         """Extract job urls to extract full job details"""
         url = "https://mossadams.taleo.net/careersection/rest/jobboard/searchjobs?lang=en&portal=4160751617"
         page_num = 1
+        last_count = 0
+        this_count = 0
 
         while True:
+            last_count = len(self.urls_to_scrape)
             payload = PAYLOAD + '"pageNo":' + str(page_num) + "}"
             json_data = self.post_request(url, out_format='json', headers=HEADERS, data=payload)
-            if len(json_data['requisitionList']) == 0:
-                break
 
             for job in json_data['requisitionList']:
                 job_url = "https://mossadams.taleo.net/careersection/6/jobdetail.ftl?job=" + job['contestNo']
                 self.urls_to_scrape.add(job_url)
 
-            page_num += 1
+            # check to see if any new records were scraped; if not, I've reach the end
+            this_count = len(self.urls_to_scrape)
+            if last_count == this_count:
+                break
+            else:
+                last_count = this_count
+                page_num += 1
 
     def extract_card_data(self, card):
         pass
