@@ -23,15 +23,18 @@ class DataTools:
         """Save a set of records to a database"""
         with pyodbc.connect(connection_str, **kwargs) as conn:
             cursor = conn.cursor()
-            cursor.fast_executemany = True
-            cursor.executemany(insert_query, data)
+            for row in data:
+                try:
+                    cursor.execute(insert_query, row)
+                except pyodbc.IntegrityError:  # duplicate records
+                    continue
 
 
 class ConnectionString:
     """A container class for building connection strings"""
     default = {
         'driver': 'ODBC DRIVER 17 FOR SQL SERVER',
-        'server': r'GTLPF1MZF5M\IZZY_SQL_001',
+        'server': r'.',
         'database': 'MERCURY',
         'trusted_connection': 'YES',
         'uid': '',
