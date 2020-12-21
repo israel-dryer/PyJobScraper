@@ -10,7 +10,7 @@ from wsl.datatools import DataTools, ConnectionString
 
 CONN_STRING = ConnectionString.build()
 INSERT_QUERY = "INSERT INTO jobs.RawJobData VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
-PAYLOAD = '''{"opportunitySearch":{"Top":50,"Skip":0,"QueryString":"","OrderBy":[{"Value":"postedDateDesc",
+PAYLOAD = '''{"opportunitySearch":{"Top":1000,"Skip":0,"QueryString":"","OrderBy":[{"Value":"postedDateDesc",
 "PropertyName":"PostedDate","Ascending":false}],"Filters":[{"t":"TermsSearchFilterDto","fieldName":4,"extra":null,
 "values":[]},{"t":"TermsSearchFilterDto","fieldName":5,"extra":null,"values":[]},{"t":"TermsSearchFilterDto",
 "fieldName":6,"extra":null,"values":[]}]},"matchCriteria":{"PreferredJobs":[],"Educations":[],
