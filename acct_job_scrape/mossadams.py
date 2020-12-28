@@ -84,11 +84,14 @@ class JobScraper(ws.WebScraper):
         record_id = '115-' + self.today + str(job_id) + str(job_id)
 
         # job description
-        temp = ws.re.search(r'\|\|\|(...+)\|\|\|false', post_text).group(1)
-        if '|||' in temp:
-            description = temp[temp.find('|||') + 3:]
-        else:
-            description = temp
+        try:
+            temp = ws.re.search(r'\|\|\|(...+)\|\|\|false', post_text).group(1)
+            if '|||' in temp:
+                description = temp[temp.find('|||') + 3:]
+            else:
+                description = temp
+        except AttributeError:
+            description = ""
 
         # consolidate the data record
         self.data_scraped.append([
