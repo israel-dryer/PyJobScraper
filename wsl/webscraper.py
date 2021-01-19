@@ -41,7 +41,7 @@ class WebScraper(ABC):
         """Run the scraper"""
         raise NotImplementedError
 
-    def create_webdriver(self, options=None, headless=False, implicit_wait=3, maximize_window=False, **kwargs):
+    def create_webdriver(self, options=None, headless=False, implicit_wait=None, maximize_window=False, **kwargs):
         """Create a webdriver instead using the Edge web driver"""
         edge_options = EdgeOptions()
         edge_options.use_chromium = True
@@ -53,7 +53,8 @@ class WebScraper(ABC):
             for opt in options:
                 edge_options.add_argument(opt)
         self.driver = Edge(options=edge_options, **kwargs)
-        self.driver.implicitly_wait(implicit_wait)
+        if implicit_wait:
+            self.driver.implicitly_wait(implicit_wait)
         if maximize_window:
             self.driver.maximize_window()
 
