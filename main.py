@@ -5,6 +5,9 @@
     Created:    2020-12-03
     Modified:   2020-12-03
     Author:     Israel Dryer
+
+    #TODO Figure out a way to handle timeout errors on Marcum
+    #TODO DHG does not appear to be pickin up all the jobs available... got 86 / site says 126
 """
 from acct_job_scrape import *
 from threading import Thread
