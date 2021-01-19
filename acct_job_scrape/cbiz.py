@@ -2,7 +2,6 @@
     JOB SCRAPER for CBIZ
 
     Created:    2020-12-01
-    Modified:   2020-12-01
     Author:     Israel Dryer
 """
 import wsl.webscraper as ws
@@ -76,14 +75,14 @@ class JobScraper(ws.WebScraper):
         page_num = 1
 
         while True:
-            page = self.get_request(url.format(page_num))
+            page = self.get_request(url.format(page_num), verify=False)
             result = self.extract_page_urls(page)
             page_num += 1
             if not result:
                 break
 
         for url in self.urls_to_scrape:
-            page = self.get_request(url, 'response')
+            page = self.get_request(url, 'response', verify=False)
             self.extract_page_data(page)
 
         if self.data_scraped:
