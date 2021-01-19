@@ -7,8 +7,11 @@
 """
 import wsl.webscraper as ws
 from wsl.datatools import DataTools, ConnectionString
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common import exceptions
+from selenium.webdriver.common.by import By
 
-By = ws.By
 CONN_STRING = ConnectionString.build()
 INSERT_QUERY = "INSERT INTO jobs.RawJobData VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 
@@ -25,11 +28,12 @@ class JobScraper(ws.WebScraper):
 
     def extract_card_data(self, card):
         """Extract data from a single card; return should reflect final form and return to `scraped_data`"""
-        job_id = req_id = card.find_element(By.TAG_NAME, 'a').get_attribute('data-ph-at-job-id-text')
-        title = card.find_element(By.TAG_NAME, 'a').get_attribute('data-ph-at-job-title-text')
-        category = card.find_element(By.TAG_NAME, 'a').get_attribute('data-ph-at-job-category-text')
-        location = card.find_element(By.TAG_NAME, 'a').get_attribute('data-ph-at-job-location-text')
-        description = card.find_element(By.CLASS_NAME, 'job-description').text
+        data_tag = card.find_element_by_tag_name('a')
+        job_id = req_id = data_tag.get_attribute('data-ph-at-job-id-text')
+        title = data_tag.get_attribute('data-ph-at-job-title-text')
+        category = data_tag.get_attribute('data-ph-at-job-category-text')
+        location = data_tag.get_attribute('data-ph-at-job-location-text')
+        description = card.find_element_by_class_name('job-description').text
         record_id = '160-' + self.today + str(job_id) + str(req_id)
         url = 'https://jobs2.deloitte.com/us/en/job/' + str(req_id) + '/'
 
@@ -50,17 +54,24 @@ class JobScraper(ws.WebScraper):
         """Run the scraper"""
         self.create_webdriver(headless=True)
         next_page = "https://jobs2.deloitte.com/us/en/Experienced-all-jobs"
+        wait = WebDriverWait(self.driver, 10)
+        condition = expected_conditions.element_to_be_clickable((By.CSS_SELECTOR, 'h4[data-ph-at-id="searchresults-job-title"]'))
 
         while True:
             self.driver.get(next_page)
+            try:
+                wait.until(condition)
+            except exceptions.TimeoutException:
+                break
+
             result = self.extract_page_data(None)
             if not result:
                 break
-            next_page = self.driver.find_element(By.XPATH, '//a[@aria-label="Next"]').get_attribute('href')
+            next_page = self.driver.find_element_by_css_selector('a[aria-label="Next"]').get_attribute('href')
             if not next_page:
                 break
 
-        self.driver.close()
+        self.driver.quit()
 
         if self.data_scraped:
             DataTools.save_to_database(self.data_scraped, CONN_STRING, INSERT_QUERY)
