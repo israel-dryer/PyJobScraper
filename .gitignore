@@ -123,3 +123,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+power_bi/Competitor-Reqs.pbix
+power_bi/Open Filled Reqs Report.pbix
