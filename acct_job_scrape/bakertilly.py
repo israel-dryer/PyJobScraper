@@ -74,7 +74,7 @@ class JobScraper(ws.WebScraper):
     def run(self):
         """Run the scraper"""
         url = "https://marcum-hr.secure.force.com/recruit/fRecruit__ApplyJobList"
-        self.create_webdriver(headless=True)
+        self.create_webdriver(headless=False)  # doesn't seem to work with headless
         self.driver.get(url)
 
         self.extract_page_data(None)

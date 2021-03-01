@@ -52,7 +52,7 @@ class WebScraper(ABC):
         if options:
             for opt in options:
                 edge_options.add_argument(opt)
-        self.driver = Edge(options=edge_options, **kwargs)
+        self.driver = Edge(options=edge_options, executable_path=r"C:\webdrivers\msedgedriver.exe", **kwargs)
         if implicit_wait:
             self.driver.implicitly_wait(implicit_wait)
         if maximize_window:
