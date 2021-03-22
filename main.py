@@ -51,8 +51,8 @@ def run():
 if __name__ == '__main__':
     time_started = perf_counter()
     print('Starting...')
-    # run()
-    e = ey.JobScraper()
-    e.run()
+    run()
+    #e = ey.JobScraper()
+    #e.run()
     time_elapsed = perf_counter() - time_started
     print(f'Finished in {time_elapsed:,.0f} seconds')

@@ -2,30 +2,19 @@
     JOB SCRAPER for DHG (Dixon Hughes Goodman)
 
     Created:    2020-11-30
-    Modified:   2020-11-30
+    Modified:   2021-03-22
     Author:     Israel Dryer
+
+    2021-03-22 > Site changed; adjusted get request and json parsing logic.
 """
 import wsl.webscraper as ws
 from wsl.datatools import DataTools, ConnectionString
 
 CONN_STRING = ConnectionString.build()
 INSERT_QUERY = "INSERT INTO jobs.RawJobData VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
-HEADERS = {
-    'Host': 'jobs.dhg.com',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0',
-    'Accept': '*/*',
-    'Accept-Language': 'en-US,en;q=0.5',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Content-Type': 'application/json; charset=utf-8',
-    'X-Requested-With': 'XMLHttpRequest',
-    'Connection': 'keep-alive'
-}
-URL = ("https://jobs.dhg.com/search-jobs/results?ActiveFacetID=0&CurrentPage=1&RecordsPerPage=88"
-       + "&Distance=50&RadiusUnitType=0&Keywords=&Location=&Latitude=&Longitude=&ShowRadius=False"
-       + "&CustomFacetName=&FacetTerm=&FacetType=0&SearchResultsModuleName=Search+Results"
-       + "&SearchFiltersModuleName=Search+Filters&SortCriteria=0&SortDirection=0&SearchType=5"
-       + "&CategoryFacetTerm=&CategoryFacetType=&LocationFacetTerm=&LocationFacetType=&KeywordType="
-       + "&LocationType=&LocationPath=&OrganizationIds=&PostalCode=&fc=&fl=&fcf=&afc=&afl=&afcf=")
+URL = ("https://jobs.dhg.com/?method=cappservicesPortal.getPortalWidgetListData&_dc=1616424559756" +
+       "&listId=opportunitylist-5&columnList=id,positiontitletext,url,location&localKeywords=" +
+       "&categoryID=2&portalModelID=1&page=1&start=1&limit=500")
 
 
 def parse_json_to_dict(soup):
@@ -51,27 +40,27 @@ class JobScraper(ws.WebScraper):
 
     def extract_page_urls(self, page):
         """Extract urls from the page for further scraping; return to `urls_to_scrape`"""
-        json_data = self.get_request(URL, out_format='json', headers=HEADERS)
-        raw_html = json_data['results']
-        soup = ws.BeautifulSoup(raw_html, 'lxml')
-        for tag in soup.find_all('a', 'locationclick'):
-            url = 'https://jobs.dhg.com' + tag['href']
-            self.urls_to_scrape.add(url)
+        json_data = self.get_request(URL, out_format='json')['query']['data']
+        for record in json_data:
+            self.urls_to_scrape.add(record['url'])
 
     def extract_page_data(self, page):
         """Extract data from page; return should reflect final form and return to `scraped_data`"""
         job_id = page['identifier']
         req_id = job_id.split('-')[-1]
         title = page['title']
-        city = page['jobLocation']['address']['addressLocality']
-        state = page['jobLocation']['address']['addressRegion']
+
+        try:
+            location = page['jobLocation'][0] if isinstance(page['jobLocation'], list) else page['jobLocation']
+            city = location['address']['addressLocality']
+            state = location['address']['addressRegion']
+        except:
+            city = state = ''
+
         description = ws.BeautifulSoup(page['description'], 'lxml').text
-        url = page['url']
         record_id = '185-' + self.today + str(job_id) + str(req_id)
 
-        self.data_scraped.append([
-            record_id, self.today, job_id, req_id, self.name, title,
-            "", "", city, state, "", description, url])
+        return record_id, self.today, job_id, req_id, self.name, title, "", "", city, state, "", description
 
     def run(self):
         """Run the scraper"""
@@ -81,7 +70,8 @@ class JobScraper(ws.WebScraper):
             soup = self.get_request(url, out_format='soup')
             page = parse_json_to_dict(soup)
             if page:
-                self.extract_page_data(page)
+                record = self.extract_page_data(page)
+                self.data_scraped.append(record + (url,))
 
         if self.data_scraped:
             DataTools.save_to_database(self.data_scraped, CONN_STRING, INSERT_QUERY)
