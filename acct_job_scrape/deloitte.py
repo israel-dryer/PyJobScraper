@@ -2,15 +2,15 @@
     JOB SCRAPER for Deloitte
 
     Created:    2020-12-03
-    Modified:   2020-12-03
+    Modified:   2021-04-20
     Author:     Israel Dryer
+
+    2021-04-20 - complete rebuild as site changed.
 """
 import wsl.webscraper as ws
+from lxml import html
 from wsl.datatools import DataTools, ConnectionString
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common import exceptions
-from selenium.webdriver.common.by import By
+import re
 
 CONN_STRING = ConnectionString.build()
 INSERT_QUERY = "INSERT INTO jobs.RawJobData VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
@@ -24,54 +24,48 @@ class JobScraper(ws.WebScraper):
 
     def extract_page_urls(self, page):
         """Extract urls from the page for further scraping; return to `urls_to_scrape`"""
-        raise NotImplementedError
+        offset = 0
+
+        while True:
+            soup = self.get_request(f'https://apply.deloitte.com/careers/SearchJobsAJAX?s=1&jobOffset={offset}')
+            links = soup.find_all('a')
+            if not links:
+                break
+            for link in links:
+                self.urls_to_scrape.add(link.get('href'))
+            offset += 20
+
 
     def extract_card_data(self, card):
         """Extract data from a single card; return should reflect final form and return to `scraped_data`"""
-        data_tag = card.find_element_by_tag_name('a')
-        job_id = req_id = data_tag.get_attribute('data-ph-at-job-id-text')
-        title = data_tag.get_attribute('data-ph-at-job-title-text')
-        category = data_tag.get_attribute('data-ph-at-job-category-text')
-        location = data_tag.get_attribute('data-ph-at-job-location-text')
-        description = card.find_element_by_class_name('job-description').text
+        job_id = req_id = re.search(r'Requisition code: (\d+)', card.text).group(1)
+        title = card.find('h2', 'article__header__text__title').text.strip()
+        category = card.find('div', 'article__header__text__subtitle').text.replace('\n', '').replace('   ', '').strip()
+        description = card.find('article', 'article article--details').text.replace('\n', '').replace('   ', '').strip()
         record_id = '160-' + self.today + str(job_id) + str(req_id)
-        url = 'https://jobs2.deloitte.com/us/en/job/' + str(req_id) + '/'
+        url = 'https://apply.deloitte.com/careers/JobDetail/' + str(req_id) + '/'
 
         self.data_scraped.append([
             record_id, self.today, job_id, req_id, self.name, title, category,
-            location, "", "", "", description, url])
+            "", "", "", "", description, url])
 
     def extract_page_data(self, page):
         """Extract data from page; return should reflect final form and return to `scraped_data`"""
-        cards = self.driver.find_elements(By.CLASS_NAME, 'jobs-list-item')
-        if not cards:
-            return False
-        for card in cards:
-            self.extract_card_data(card)
-        return True
+        pass
 
     def run(self):
         """Run the scraper"""
-        self.create_webdriver(headless=True)
-        next_page = "https://jobs2.deloitte.com/us/en/Experienced-all-jobs"
-        wait = WebDriverWait(self.driver, 10)
-        condition = expected_conditions.element_to_be_clickable((By.CSS_SELECTOR, 'h4[data-ph-at-id="searchresults-job-title"]'))
+        self.extract_page_urls(None)
+        if not len(self.urls_to_scrape):
+            print(f"{self.name} >> {len(self.data_scraped)} records")
+            return
 
-        while True:
-            self.driver.get(next_page)
+        for url in list(self.urls_to_scrape):
             try:
-                wait.until(condition)
-            except exceptions.TimeoutException:
-                break
-
-            result = self.extract_page_data(None)
-            if not result:
-                break
-            next_page = self.driver.find_element_by_css_selector('a[aria-label="Next"]').get_attribute('href')
-            if not next_page:
-                break
-
-        self.driver.quit()
+                card = self.get_request(url)
+                self.extract_card_data(card)
+            except:
+                continue
 
         if self.data_scraped:
             DataTools.save_to_database(self.data_scraped, CONN_STRING, INSERT_QUERY)
