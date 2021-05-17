@@ -25,6 +25,7 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+gt_data
 MANIFEST
 
 # PyInstaller
@@ -127,3 +128,4 @@ power_bi/Competitor-Reqs.pbix
 power_bi/Open Filled Reqs Report.pbix
 
 .idea
+.idea/PyJobScraper.iml
