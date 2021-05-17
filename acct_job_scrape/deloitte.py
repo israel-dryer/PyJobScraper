@@ -62,6 +62,7 @@ class JobScraper(ws.WebScraper):
 
         for url in list(self.urls_to_scrape):
             try:
+                print(url)
                 card = self.get_request(url)
                 self.extract_card_data(card)
             except:
@@ -69,7 +70,6 @@ class JobScraper(ws.WebScraper):
 
         if self.data_scraped:
             DataTools.save_to_database(self.data_scraped, CONN_STRING, INSERT_QUERY)
-            print(f"{self.name} >> {len(self.data_scraped)} records")
 
 
 if __name__ == '__main__':
