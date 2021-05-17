@@ -20,7 +20,14 @@ class DataTools:
 
     @staticmethod
     def save_to_database(data, connection_str, insert_query, **kwargs):
-        """Save a set of records to a database"""
+        """Save a set of records to a database
+
+        Args:
+            data (List[Tuple]): the data to insert into the database
+            connection_str (str): the database connection str
+            insert_query (str): a sql script
+            **kwargs: optional keyword arguments
+        """
         with pyodbc.connect(connection_str, **kwargs) as conn:
             cursor = conn.cursor()
             for row in data:
