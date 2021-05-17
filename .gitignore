@@ -26,6 +26,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 gt_data
+power_bi
 MANIFEST
 
 # PyInstaller
