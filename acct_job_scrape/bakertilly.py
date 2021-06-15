@@ -31,23 +31,19 @@ class JobScraper(ws.WebScraper):
         """Extract data from page; return should reflect final form and return to `scraped_data`"""
         page_num = 1
         wait = WebDriverWait(self.driver, 10)
-        item_is_clickable = expected_conditions.element_to_be_clickable((By.CSS_SELECTOR, 'span[itemprop="title"]'))
-        url = "https://careers.bakertilly.com/jobs?tags1=Experienced&page={}"
-        self.driver.get(url.format(page_num))
-        try:
-            wait.until(item_is_clickable)
-        except exceptions.TimeoutException:
-            pass
+        
+        while True:
+            item_is_clickable = expected_conditions.element_to_be_clickable((By.CSS_SELECTOR, 'span[itemprop="title"]'))
+            url = "https://careers.bakertilly.com/jobs?page={}&sortBy=relevance&tags1=Experienced&limit=100"
+            self.driver.get(url.format(page_num))
+            try:
+                wait.until(item_is_clickable)
+            except exceptions.TimeoutException:
+                pass
 
-        cards = self.driver.find_elements_by_class_name('mat-expansion-panel')
-
-        total_results = int(
-            self.driver.find_element_by_css_selector('#search-results-indicator').text.replace('Results', '').strip())
-        a, b = divmod(total_results, 10)
-        pages = a + (1 if b > 0 else 0)
-
-        while page_num <= pages:
-
+            cards = self.driver.find_elements_by_class_name('mat-expansion-panel')
+            if not cards:
+                break
             for card in cards:
                 job_title = card.find_element_by_css_selector('[itemprop="title"]').text
                 req_id = job_id = card.find_element_by_css_selector('.req-id span').text
@@ -62,18 +58,10 @@ class JobScraper(ws.WebScraper):
                 ))
 
             page_num += 1
-            self.driver.get(url.format(page_num))
-
-            try:
-                wait.until(item_is_clickable)
-            except exceptions.TimeoutException:
-                continue
-
-            cards = self.driver.find_elements_by_class_name('mat-expansion-panel')
 
     def run(self):
         """Run the scraper"""
-        url = "https://marcum-hr.secure.force.com/recruit/fRecruit__ApplyJobList"
+        url = 'https://careers.bakertilly.com/jobs/'
         self.create_webdriver(headless=False)  # doesn't seem to work with headless
         self.driver.get(url)
 
