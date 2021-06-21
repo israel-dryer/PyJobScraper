@@ -37,8 +37,8 @@ class JobScraper(ws.WebScraper):
 
     def extract_page_urls(self, _):
         """Extract urls from the page for further scraping; return to `urls_to_scrape`"""
-        url = "https://eygbl.referrals.selectminds.com/jobs/search/104180310"
-        next_page = "https://eygbl.referrals.selectminds.com/jobs/search/104180310/page{}"
+        url = "https://eygbl.referrals.selectminds.com/jobs/search/108652907"  # NOTE this number changes periodically.
+        next_page = "https://eygbl.referrals.selectminds.com/jobs/search/108652907/page{}"
         page_num = 1
         last_count = 0
 
