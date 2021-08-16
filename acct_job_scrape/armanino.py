@@ -2,7 +2,7 @@
     JOB SCRAPER for ARMANINO
 
     Created:    2020-12-03
-    Modified:   2020-12-03
+    Modified:   2021-08-16
     Author:     Israel Dryer
 """
 from random import random
@@ -29,7 +29,7 @@ class JobScraper(ws.WebScraper):
             soup = self.get_request(url, out_format='soup')
             for tag in soup.find_all('a', 'iCIMS_Anchor'):
                 self.urls_to_scrape.add(tag['href'])
-            url = soup.find('div', 'iCIMS_PagingBatch').find_next_sibling()['href']
+            url = soup.find('span', text='Next page of results').parent['href']
             if len(self.urls_to_scrape) == last_count:
                 break
             last_count = len(self.urls_to_scrape)
