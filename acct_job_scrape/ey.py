@@ -1,30 +1,16 @@
 """
     JOB SCRAPER for EY (Ernst & Young)
 
-    Created:    2020-12-03
-    Modified:   2020-12-03
-    Author:     Israel Dryer
+    Created     :   2020-12-03
+    Author      :   Israel Dryer
+
+    2021-08-23  Rebuilt script for new website.
 """
 import wsl.webscraper as ws
 from wsl.datatools import DataTools, ConnectionString
 
 CONN_STRING = ConnectionString.build()
 INSERT_QUERY = "INSERT INTO jobs.RawJobData VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
-HEADERS = {
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Cache-Control': 'max-age=0',
-    'Connection': 'keep-alive',
-    'Host': 'eygbl.referrals.selectminds.com',
-    'Sec-Fetch-Dest': 'document',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-Site': 'none',
-    'Sec-Fetch-User': '?1',
-    'Upgrade-Insecure-Requests': '1',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36 Edg/86.0.622.63'
-}
-
 
 class JobScraper(ws.WebScraper):
     """A web scraper for EY jobs"""
@@ -37,35 +23,37 @@ class JobScraper(ws.WebScraper):
 
     def extract_page_urls(self, _):
         """Extract urls from the page for further scraping; return to `urls_to_scrape`"""
-        url = "https://eygbl.referrals.selectminds.com/jobs/search/108652907"  # NOTE this number changes periodically.
-        next_page = "https://eygbl.referrals.selectminds.com/jobs/search/108652907/page{}"
-        page_num = 1
-        last_count = 0
 
-        soup = self.get_request(url, headers=HEADERS, out_format='soup')
+        start_row = 0
+        url = 'https://careers.ey.com/ey/search/?q=&location=US&sortColumn=referencedate&sortDirection=desc&startrow={}'
+
+        site = 'https://careers.ey.com'
+
         while True:
-            for tag in soup.find_all('a', 'job_link'):
-                self.urls_to_scrape.add(tag['href'])
-            if len(self.urls_to_scrape) == last_count:
+            soup = self.get_request(url.format(start_row), out_format='soup')
+            atags = soup.find_all('a', 'jobTitle-link')
+            temp = set([site + tag['href'] for tag in atags])
+            if (temp - self.urls_to_scrape):
+                self.urls_to_scrape.update(temp)
+            else:
                 break
-            last_count = len(self.urls_to_scrape)
-            page_num += 1
-            soup = self.get_request(next_page.format(page_num), headers=HEADERS)
+            start_row += 25
 
     def extract_page_data(self, url):
         """Extract data from page; return should reflect final form and return to `scraped_data`"""
-        soup = self.get_request(url, headers=HEADERS, out_format='soup')
-        job_id = soup.find('input', {'name': 'Job.id'})['value']
-        req_id = soup.find('dd', 'job_external_id').span.text
-        title = soup.find("h1", "title").text.strip()
-        category = soup.find('dl', 'field_category').dd.span.text
-        location = soup.find('h4', 'primary_location').text.replace('🔍', '').strip()
-        description = soup.find('div', 'job_description').text.strip()
-        record_id = '100-' + self.today + str(job_id) + str(req_id)
+        try:
+            soup = self.get_request(url, out_format='soup')
+            req_id = job_id = url.split('/')[-2]
+            record_id = f'100-{self.today}-{job_id}-{req_id}'
+            location = soup.find("span", {"data-careersite-propertyid": "city"}).text.strip()
+            title = soup.find("span", {"data-careersite-propertyid": "title"}).text.strip()
+            description = soup.find("span", {"data-careersite-propertyid": "description"}).text.strip()
+        except:
+            return
 
         self.data_scraped.append([
             record_id, self.today, job_id, req_id, self.name, title,
-            category, location, "", "", "", description, url])
+            "", location, "", "", "", description, url])
 
     def run(self):
         """Run the scraper"""
